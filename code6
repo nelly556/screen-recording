@@ -1,0 +1,66 @@
+// Get the video element where the recording will be displayed
+const videoElement = document.getElementById('recorded-video');
+
+// Get the start, stop, and download buttons
+const startButton = document.getElementById('start-button');
+const stopButton = document.getElementById('stop-button');
+const downloadButton = document.getElementById('download-button');
+
+// Variables to store the MediaRecorder instance and recorded chunks
+let mediaRecorder;
+let recordedChunks = [];
+
+// Event listener for the start button
+startButton.addEventListener('click', async () => {
+  try {
+    // Get the screen media stream
+    const mediaStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: true
+    });
+
+    // Create a new MediaRecorder instance
+    mediaRecorder = new MediaRecorder(mediaStream);
+
+    // Event listener for dataavailable event
+    mediaRecorder.addEventListener('dataavailable', (event) => {
+      recordedChunks.push(event.data);
+    });
+
+    // Start recording
+    mediaRecorder.start();
+
+    // Enable/disable buttons
+    startButton.disabled = true;
+    stopButton.disabled = false;
+  } catch (error) {
+    console.error('Error accessing screen media:', error);
+  }
+});
+
+// Event listener for the stop button
+stopButton.addEventListener('click', () => {
+  // Stop recording
+  mediaRecorder.stop();
+
+  // Enable/disable buttons
+  startButton.disabled = false;
+  stopButton.disabled = true;
+});
+
+// Event listener for the download button
+downloadButton.addEventListener('click', () => {
+  // Create a Blob from the recorded chunks
+  const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+
+  // Create a temporary URL for the Blob
+  const url = URL.createObjectURL(recordedBlob);
+
+  // Set the video source to the temporary URL
+  videoElement.src = url;
+
+  // Enable the download link and set its href attribute
+  const downloadLink = document.getElementById('download-link');
+  downloadLink.href = url;
+  downloadLink.download = 'recording.webm';
+});
